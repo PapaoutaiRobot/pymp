@@ -43,21 +43,21 @@ class Settings(dict):
   def readFromFile(self):
     self.clear()
     pattern=re.compile(r"(.*?)(#.*|$)")
-    logging.debug("")
+    logging.log(1,"")
     try:
       fileObject=open(self.settingsFile,"r")
-      logging.debug("")
+      logging.log(1,"")
       for line in fileObject:
-        logging.debug(line)
+        logging.log(1,line)
         if pattern.match(line):
           raw=pattern.findall(line)[0][0]
-          logging.debug(raw)
+          logging.log(1,raw)
           columns=raw.split(" ")
-          logging.debug(columns)
+          logging.log(1,columns)
           c0=columns[0]
-          logging.debug(c0)
+          logging.log(1,c0)
           c1=raw.replace(c0+" ","").lstrip()
-          logging.debug(c1)
+          logging.log(1,c1)
           self[c0]=c1
       fileObject.close()
     except:

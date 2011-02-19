@@ -60,7 +60,7 @@ class DownloadWorker(threading.Thread):
       self.options.append("-w")
       
     for i in self.options:
-      logging.debug(type(i).__name__+" "+i)
+      logging.log(2,type(i).__name__+" "+i)
     return
   
   def run(self):
@@ -186,7 +186,7 @@ if __name__== '__main__':
     for i,j in DownloadWorker.result.iteritems():
       print j,i
     for i in DownloadWorker.result.itervalues():
-      if i["state"] != "done":
+      if not (i["state"] != "done" or i["state"] == "error"):
         cnt+=1
   DownloadWorker.queue.join()
   sys.exit(0)

@@ -168,7 +168,7 @@ class InputPage(QtGui.QWidget):
     self.groupBoxInput.setTitle(QtGui.QApplication.translate("MainWindow","Download &list", None, QtGui.QApplication.UnicodeUTF8))
     self.inputBrowser.setText(QtGui.QApplication.translate(
                                                            "MainWindow",
-                                                           "# Insert the URLs to download here. Put each in a new line.\n", 
+                                                           "# Insert the URLs to download or files to convert here. Put each in a new line.\n", 
                                                            None, 
                                                            QtGui.QApplication.UnicodeUTF8))
     return

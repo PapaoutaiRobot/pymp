@@ -141,14 +141,18 @@ class ConvertWorker(threading.Thread):
           self.executeSubprocess("sox")
           self.executeSubprocess("lame")
         self.executeSubprocess("normalize")
-      self.updateResult("done")
+      if not os.path.isfile(self.workingFile.last()):
+        self.workingFile[len(self.workingFile)-1] = ""
+        self.updateResult("error")
+      else:
+        self.updateResult("done")
       self.cleanUp()
     return
 
   def updateResult(self,state):
     try:
       ConvertWorker.resultLock.acquire()
-      if "done" == state:
+      if "done" == state or "error" == state:
         ConvertWorker.queue.task_done()
         ConvertWorker.result[self.convertingFile] = {"state" : state, 
                                                      "step": self.currentRunning,
@@ -261,6 +265,8 @@ class ConvertWorker(threading.Thread):
       return "0%"
     
   def executeFfmpeg(self):
+    if not os.path.isfile(self.convertingFile):
+      return
     self.currentRunning="ffmpeg"
     self.workingFile.append(self.convertingFile+".mp3")
     self.tmpFile=tempfile.TemporaryFile()
@@ -284,6 +290,8 @@ class ConvertWorker(threading.Thread):
     return
   
   def executeLame(self):
+    if not os.path.isfile(self.workingFile.last()):
+      return
     self.currentRunning="lame"
     toConvert=self.workingFile.last()
     self.workingFile.append(self.convertingFile+".mp3")
@@ -304,6 +312,8 @@ class ConvertWorker(threading.Thread):
     return
   
   def executeMplayer(self):
+    if not os.path.isfile(self.convertingFile):
+      return
     self.currentRunning="mplayer"
     self.workingFile.append(self.convertingFile+".dump.wav")
     self.filesToDelete.append(self.workingFile.last())
@@ -322,10 +332,14 @@ class ConvertWorker(threading.Thread):
     while None != self.p and None == self.p.poll():
       self.updateResult(self.getStateSubprocess())
       time.sleep(0.1)
+    if not os.path.isfile(self.workingFile.last()):
+      logging.error("Could not convert "+self.convertingFile)
     self.tmpFile.close()
     return
   
   def executeNormalize(self):
+    if not os.path.isfile(self.workingFile.last()):
+      return
     self.currentRunning="normalize"
     self.tmpFile=tempfile.TemporaryFile()
     self.p = subprocess.Popen([
@@ -343,6 +357,8 @@ class ConvertWorker(threading.Thread):
     return
   
   def executeSox(self):
+    if not os.path.isfile(self.workingFile.last()):
+      return
     self.currentRunning="sox"
     toTrim=self.workingFile.last()
     self.workingFile.append(toTrim+".trim.wav")
@@ -426,8 +442,9 @@ if __name__== '__main__':
 #  ConvertWorker.queue.put("../test/Aladdin_intro_German-bJAyLYR71NM.flv")
 #  ConvertWorker.queue.put("../test/Warum_bin_ich_so_fr_hlich-jrZHxIA0eVU.flvAaAStayInTehLight")
 #  ConvertWorker.queue.put("../test/Gummib_renbande_Titelsong_Lyrics-O5sd_CuZxNc.flv")
-  ConvertWorker.queue.put("../test/Speedy_Gonzales_Die_schnellste_Maus_von_Mexiko_german_Intro-lfEDO1uZxVA.flv")
+#  ConvertWorker.queue.put("../test/Speedy_Gonzales_Die_schnellste_Maus_von_Mexiko_german_Intro-lfEDO1uZxVA.flv")
 #  ConvertWorker.queue.put("../test/Warum_bin_ich_so_fr_hlich-jrZHxIA0eVU.flv")
+  ConvertWorker.queue.put("../test/list.1")
   time.sleep(0.1)
   cnt=1
   while cnt > 0:
@@ -435,7 +452,7 @@ if __name__== '__main__':
     cnt=0
     for i,j in ConvertWorker.result.iteritems():
       print j,i
-      if "done" != j["state"]:
+      if not ("done" == j["state"] or "error" == j["state"]):
         cnt+=1
   ConvertWorker.queue.join()
   sys.exit(0)
